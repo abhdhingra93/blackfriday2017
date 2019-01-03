@@ -1,0 +1,166 @@
+install.packages("fastDummies")
+install.packages("plyr")#for count ()
+install.packages("magrittr")
+#### association rules
+install.packages("arules")
+install.packages("arulesViz")
+install.packages("normalr") #normalize/standardise
+install.packages("caret")
+install.packages("factoextra")
+library(factoextra)
+library(caret)
+library(fastDummies)
+library(plyr)
+library(magrittr) # %>%
+library(arules)
+install.packages("dplyr")
+library(dplyr)
+library(arulesViz)
+library(normalr)
+
+######                               D A T A  L O A D I N G  &  P R E P A R A T I O N
+
+setwd("/Users/Anju/Desktop/Datasets")
+
+df <- data.frame(read.csv("BlackFriday.csv"))
+summary(df)
+
+DummyGender <- data.frame(fastDummies::dummy_cols(df, select_columns = "Gender"))
+DummyCity <- data.frame(fastDummies::dummy_cols(df, select_columns = "City_Category"))
+DummyOccupation <- data.frame(fastDummies::dummy_cols(df, select_columns = "Occupation"))
+DummyAge <- data.frame(fastDummies::dummy_cols(df, select_columns = "Age"))
+DummySICCY <- data.frame(fastDummies::dummy_cols(df, select_columns = "Stay_In_Current_City_Years"))
+DummyMS <- data.frame(fastDummies::dummy_cols(df, select_columns = "Marital_Status"))
+DummyPC1 <- data.frame(fastDummies::dummy_cols(df, select_columns = "Product_Category_1"))
+
+newdata <- cbind(DummyGender,DummyMS,DummyCity,DummyOccupation,DummyAge,DummySICCY,DummyPC1)
+
+#removing duplicate columns
+newdata <- newdata[, !duplicated(colnames(newdata))]
+
+
+######                       D A T A   W R A N G L I N G   &   D A T A  T R A N S F O R M A T I O N
+
+userIDcount <- count(df, df$User_ID)
+NumberofProducts <- data.frame(userIDcount$n)
+
+#aggregating total amount spent by each user
+Amountspent <- data.frame(aggregate(newdata$Purchase, by=list(newdata$User_ID), FUN=sum))
+TotalAmountSpent <- data.frame(Amountspent$x)
+
+#filer data out & duplicate rows based on duplicate User ID
+filter <- data.frame(newdata %>% distinct(User_ID, .keep_all = TRUE))
+
+#Merge all
+final_df <- data.frame(filter, TotalAmountSpent, NumberofProducts)
+final_df[, !duplicated(colnames(final_df))]
+
+PC1 <- data.frame(aggregate(newdata$Product_Category_1_1, by=list(newdata$User_ID), FUN=sum))
+PC1.1 <- data.frame(PC1$x)
+PC2 <- data.frame(aggregate(newdata$Product_Category_1_2, by=list(newdata$User_ID), FUN=sum))
+PC2.1 <- data.frame(PC2$x)
+PC3 <- data.frame(aggregate(newdata$Product_Category_1_3, by=list(newdata$User_ID), FUN=sum))
+PC3.1 <- data.frame(PC3$x)
+PC4 <- data.frame(aggregate(newdata$Product_Category_1_4, by=list(newdata$User_ID), FUN=sum))
+PC4.1 <- data.frame(PC4$x)
+PC5 <- data.frame(aggregate(newdata$Product_Category_1_5, by=list(newdata$User_ID), FUN=sum))
+PC5.1 <- data.frame(PC5$x)
+PC6 <- data.frame(aggregate(newdata$Product_Category_1_6, by=list(newdata$User_ID), FUN=sum))
+PC6.1 <- data.frame(PC6$x)
+PC7 <- data.frame(aggregate(newdata$Product_Category_1_7, by=list(newdata$User_ID), FUN=sum))
+PC7.1 <- data.frame(PC7$x)
+PC8 <- data.frame(aggregate(newdata$Product_Category_1_8, by=list(newdata$User_ID), FUN=sum))
+PC8.1 <- data.frame(PC8$x)
+PC9 <- data.frame(aggregate(newdata$Product_Category_1_9, by=list(newdata$User_ID), FUN=sum))
+PC9.1 <- data.frame(PC9$x)
+PC10 <- data.frame(aggregate(newdata$Product_Category_1_10, by=list(newdata$User_ID), FUN=sum))
+PC10.1 <- data.frame(PC10$x)
+PC11 <- data.frame(aggregate(newdata$Product_Category_1_11, by=list(newdata$User_ID), FUN=sum))
+PC11.1 <- data.frame(PC11$x)
+PC12 <- data.frame(aggregate(newdata$Product_Category_1_12, by=list(newdata$User_ID), FUN=sum))
+PC12.1 <- data.frame(PC12$x)
+PC13 <- data.frame(aggregate(newdata$Product_Category_1_13, by=list(newdata$User_ID), FUN=sum))
+PC13.1 <- data.frame(PC13$x)
+PC14 <- data.frame(aggregate(newdata$Product_Category_1_14, by=list(newdata$User_ID), FUN=sum))
+PC14.1 <- data.frame(PC14$x)
+PC15 <- data.frame(aggregate(newdata$Product_Category_1_15, by=list(newdata$User_ID), FUN=sum))
+PC15.1 <- data.frame(PC15$x)
+PC16 <- data.frame(aggregate(newdata$Product_Category_1_16, by=list(newdata$User_ID), FUN=sum))
+PC16.1 <- data.frame(PC16$x)
+PC17 <- data.frame(aggregate(newdata$Product_Category_1_17, by=list(newdata$User_ID), FUN=sum))
+PC17.1 <- data.frame(PC17$x)
+PC18 <- data.frame(aggregate(newdata$Product_Category_1_18, by=list(newdata$User_ID), FUN=sum))
+PC18.1 <- data.frame(PC18$x)
+
+# Merged all product category
+MergePC <- data.frame(cbind(PC1.1,PC2.1,PC3.1,PC4.1,PC5.1,PC6.1,PC7.1,PC8.1,PC9.1,PC10.1,PC11.1,PC12.1,PC13.1,PC14.1,PC15.1,PC16.1,PC17.1,PC18.1))
+
+compress_df <- data.frame(MergePC, final_df)
+
+compress_df[,19:30] <- NULL
+compress_df[,59:76] <- NULL
+
+compress_df$Amountspent.x <- (compress_df$Amountspent.x-min(compress_df$Amountspent.x))/(max(compress_df$Amountspent.x)-min(compress_df$Amountspent.x))
+compress_df$Amountspent.x <- round(compress_df$Amountspent.x, 2)
+
+
+#                       M O D E L L I N G   &   V A L I D A T I O N   T H R O U G H   R A N D O M   F O R E S T
+
+# Splitting Data into TRAIN & TEST
+  a <- vector("list", 1000)
+  for (i in 1:1000)
+  {
+  set.seed(i)
+  split <- data.frame(sample(2, nrow(compress_df), replace = TRUE, prob = c(0.9, 0.1) ))
+  train_bf <- compress_df[split == 1, ]
+  test_bf <- compress_df[split == 2,]
+  write.csv(train_bf, "train_bf.csv")
+  train_bf_df <- read.csv("train_bf.csv")
+  train_bf_df$Amountspent.x <- as.factor(train_bf_df$Amountspent.x)
+  write.csv(test_bf, "test_bf.csv")
+  test_bf_df <- read.csv("test_bf.csv")
+  test_bf_df$Amountspent.x <- as.factor(test_bf_df$Amountspent.x)
+  test_bf_df$X <- NULL
+  train_bf_df$X <- NULL
+  
+  ###                 R A N D O M   F O R E S T
+  set.seed(1234)
+  model_bf_df <- randomForest(Amountspent.x ~ ., data = train_bf_df, ntree = 130, mtry=59, importance = TRUE, do.trace=TRUE)
+  
+  #On Test data
+  test_model_bf_df <- predict(model_bf_df, test_bf_df, type = "class", do.trace=TRUE)
+  levels(test_bf_df$Amountspent.x) <- levels(test_model_bf_df)
+  cm_test <- confusionMatrix(test_model_bf_df, test_bf_df$Amountspent.x)
+  a[i] <- cm_test$overall['Accuracy']
+  }
+
+# 269: 56.7%, 15: 56.9% , 595: 57.14%, 
+print(cm_test)
+
+#On Train data
+train_model_bf_df <- predict(model_bf_df, train_bf_df)
+cm_train <- confusionMatrix(train_model_bf_df, train_bf_df$Amountspent.x)
+
+#Improving
+tune <- tuneRF(train_bf_df[,-2], train_bf_df[,2], stepFactor=0.005, plot=TRUE, ntreeTry=200, trace=TRUE, improve =0.05)
+
+#no. of node fore tree
+hist(treesize(model_bf_df), col="green")
+
+#variable importance
+varImpPlot(model_bf_df)
+
+#importance
+importance(model_bf_df)
+varUsed(model_bf_df)
+
+#plotting
+plot(model_bf_df)
+
+######                                         R E G R E S S I O N
+
+reg_raw <- lm(Purchase~., data=newdata[12:70])
+summary(reg_raw)
+
+reg_compress_count <- lm(Amountspent.x ~., data=compress_df)
+summary(reg_compress_count)
